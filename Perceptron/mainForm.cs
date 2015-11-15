@@ -48,12 +48,12 @@ namespace Perceptron
             new Perceptron.PairSet() {
                 // Бинарное изображение
                 image = new int[] {
-                    0, 1, 1, 0,
-                    1, 0, 0, 1,
-                    1, 0, 0, 1,
+                    -1, 1, 1, -1,
+                    1, -1, -1, 1,
+                    1, -1, -1, 1,
                     1, 1, 1, 1,
-                    1, 0, 0, 1,
-                    1, 0, 0, 1,
+                    1, -1, -1, 1,
+                    1, -1, -1, 1,
                 }, 
                 // Ожидаемый вектор результат
                 t = ResultKeys[0]
@@ -62,12 +62,12 @@ namespace Perceptron
             new Perceptron.PairSet() {
                 // Бинарное изображение
                 image = new int[] {
-                    1, 0, 0, 1,
-                    1, 0, 0, 1,
-                    1, 0, 0, 1,
+                    1, -1, -1, 1,
+                    1, -1, -1, 1,
+                    1, -1, -1, 1,
                     1, 1, 1, 1,
-                    1, 0, 0, 1,
-                    1, 0, 0, 1,
+                    1, -1, -1, 1,
+                    1, -1, -1, 1,
                 },
                 // Ожидаемый вектор результат
                 t = ResultKeys[1]
@@ -78,12 +78,12 @@ namespace Perceptron
             // Буква "Р"
             new Perceptron.PairSet() {
                 image = new int[] {
-                    1, 1, 1, 0,
-                    1, 0, 0, 1,
-                    1, 0, 0, 1,
-                    1, 1, 1, 0,
-                    1, 0, 0, 0,
-                    1, 0, 0, 0,
+                    1, 1, 1, -1,
+                    1, -1, -1, 1,
+                    1, -1, -1, 1,
+                    1, 1, 1, -1,
+                    1, -1, -1, -1,
+                    1, -1, -1, -1,
                 },
                 // Ожидаемый вектор результат
                 t = ResultKeys[0]
@@ -92,11 +92,11 @@ namespace Perceptron
             new Perceptron.PairSet() {
                 image = new int[] {
                     1, 1, 1, 1,
-                    1, 0, 0, 1,
+                    1, -1, -1, 1,
                     1, 1, 1, 1,
-                    0, 0, 1, 1,
-                    0, 1, 0, 1,
-                    1, 1, 0, 1,
+                    -1, -1, 1, 1,
+                    -1, 1, -1, 1,
+                    1, -1, -1, 1,
                 },
                 t = ResultKeys[1]
             }
@@ -112,78 +112,17 @@ namespace Perceptron
                 gui[i].attachTo(inputTrainSetPanel);
                 gui[i].SetImage(name[i].image);
             }
-
-
-            
+            // Создаем окно ввода пользовательского символа            
             userGui.attachTo(InputRecognPanel, true);
-
-            Perceptron.log = new Perceptron.Log(logBox.AppendText);
-
-            // 
-            // dataGridView
-            // 
             
-            ///////////////////            
-            ///////////////////
-            ///////////////////
-            SA_Weights.RowCount = associativeCount;
-            SA_Weights.ColumnCount = sensorCount;
-
-
-            foreach (DataGridViewColumn column in SA_Weights.Columns)
-            {
-                column.HeaderText = "S" + column.Index;
-                column.SortMode = DataGridViewColumnSortMode.NotSortable;
-                column.Width = 30;
-            }
-
-            foreach (DataGridViewRow row in SA_Weights.Rows)
-            {
-                row.HeaderCell.Value = "A" + row.Index;
-            }
-            /////////////////////
-            AR_Weights.RowCount = reactionCount;
-            AR_Weights.ColumnCount = associativeCount;
-
-            foreach (DataGridViewColumn column in AR_Weights.Columns)
-            {
-                column.HeaderText = "A" + column.Index;
-                column.SortMode = DataGridViewColumnSortMode.NotSortable;
-                column.Width = 30;
-            }
-
-            /////////////////////////
-            Steps.ColumnCount = associativeCount + 2;
-            Steps.RowCount = 1;
-
-
-            //Steps.AutoResizeRowHeadersWidth(DataGridViewRowHeadersWidthSizeMode.AutoSizeToAllHeaders);
-            //foreach (DataGridViewRow row in Steps.Rows)
-            //{
-
-            //    row.HeaderCell.Value = "W" + row.Index;
-            //}
-            //Steps.Rows[associativeCount].HeaderCell.Value = "img #0";
-            //Steps.Rows[associativeCount + 1].HeaderCell.Value = "img #1";
-
-            foreach (DataGridViewColumn column in Steps.Columns)
-            {
-                column.HeaderText = "Wi[" + column.Index + "]";
-                column.SortMode = DataGridViewColumnSortMode.NotSortable;
-                column.Width = 30;
-            }
-            Steps.Columns[0].HeaderText = "img #0";
-            Steps.Columns[1].HeaderText = "img #1";
-            
-
-            Perceptron.SAweights = SA_Weights;
-            Perceptron.ARweights = AR_Weights;
-            Perceptron.Steps = Steps;
-
         }
 
         private void btnLearn_Click(object sender, EventArgs e)
         {
+            perceptron = new Perceptron(sensorCount, associativeCount, reactionCount);
+            // Задаем метод логгер
+            Perceptron.log = new Perceptron.Log(logBox.AppendText);
+
             learningSet.Enabled = false;
             learningType.Enabled = false;
 

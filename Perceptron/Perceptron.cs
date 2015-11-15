@@ -37,9 +37,6 @@ namespace Perceptron
         }
 
         public delegate void Log(string msg);
-        public static DataGridView SAweights;
-        public static DataGridView ARweights;
-        public static DataGridView Steps;
 
         // Пара: изображение - вектор ожидаемый на выходе
         public struct PairSet
@@ -54,12 +51,7 @@ namespace Perceptron
         {
             this.sensor = sensorNeurons;
             this.associative = associativeNeurons;
-            this.reaction = reactionNeurons;
-            // Создаем слои нейронной сети
-            // Сенсорное поле (принимает входное изображение). Используем бинарные нейроны
-            //S = new int[sensor];
-            
-            
+            this.reaction = reactionNeurons;            
         }
 
         void InitNetwork(List<PairSet> images)
@@ -132,11 +124,9 @@ namespace Perceptron
             }
             double minRi = Ri.Min();
             double maxRi = Ri.Max();
-            thetaR = Ri.Sum() / images.Count;
+            //thetaR = Ri.Sum() / images.Count;
+            thetaR = (minRi + maxRi) / 2.0;
             log(string.Format("min={0}, max={1}, Пороговое значение активации выходных нейронов R -> theta={2}", minRi, maxRi, thetaR) + Environment.NewLine);
-            // Show weights
-            Show_SA_Weights();
-            Show_AR_Weights();
             // Скармливаем сети все переданные изображения
             ////////////////////////////////////////////////////////////////////
             log("============================================================" + Environment.NewLine);            
@@ -158,7 +148,6 @@ namespace Perceptron
             ////////////////////////////////////////////////////////////////////
             // 
             ////////////////////////////////////////////////////////////////////
-            Steps.RowCount = 1;
             log("==================[Инициализация завершена]=================" + Environment.NewLine);
         }
         // Функция активации
@@ -238,10 +227,7 @@ namespace Perceptron
             else
             {
             }
-            
-
         }
-
 
         List<double> FeedAssocLayer(int[] S)
         {
@@ -264,65 +250,6 @@ namespace Perceptron
             return assocOutputs;
         }
 
-
-        void Show_SA_Weights()
-        {
-            SAweights.RowCount = associative;
-            SAweights.ColumnCount = sensor;
-            //SAweights.Size = new System.Drawing.Size(sensor * SAweights.Columns[0].Width + 50, associative * SAweights.Rows[0].Height + 40);
-
-            foreach (DataGridViewColumn column in SAweights.Columns)
-            {
-                column.HeaderText = "S" + column.Index;
-                column.SortMode = DataGridViewColumnSortMode.NotSortable;
-            }
-
-            SAweights.AutoResizeRowHeadersWidth(DataGridViewRowHeadersWidthSizeMode.AutoSizeToAllHeaders);
-            foreach (DataGridViewRow row in SAweights.Rows)
-            {
-
-                row.HeaderCell.Value = "A" + row.Index;// String.Format("A{0}", row.Index + 1);
-            }
-
-
-            for (int i = 0; i < associative; ++i)
-            {
-                SAweights.Rows[i].HeaderCell.Value = "A" + i;
-                for (int j = 0; j < sensor; ++j)
-                {
-                    SAweights.Rows[i].Cells[j].Value = SA_W[j, i];
-                }
-            }
-
-        }
-
-        void Show_AR_Weights()
-        {
-            ARweights.RowCount = reaction;
-            ARweights.ColumnCount = associative;
-            //SAweights.Size = new System.Drawing.Size(sensor * SAweights.Columns[0].Width + 50, associative * SAweights.Rows[0].Height + 40);
-
-            foreach (DataGridViewColumn column in ARweights.Columns)
-            {
-                column.HeaderText = "A" + column.Index;
-                column.SortMode = DataGridViewColumnSortMode.NotSortable;
-            }
-
-            ARweights.AutoResizeRowHeadersWidth(DataGridViewRowHeadersWidthSizeMode.AutoSizeToAllHeaders);
-            foreach (DataGridViewRow row in ARweights.Rows)
-            {
-
-                row.HeaderCell.Value = "R" + row.Index;// String.Format("A{0}", row.Index + 1);
-            }
-
-
-            ARweights.Rows[0].HeaderCell.Value = "R0";
-            for (int j = 0; j < associative; ++j)
-            {
-                ARweights.Rows[0].Cells[j].Value = AR_W[j];
-            }
-        }
-
         public int Recognize(int[] image)
         {
             List<double> sumAi = FeedAssocLayer(image);
@@ -332,32 +259,23 @@ namespace Perceptron
                 sumR += AR_W[a] * ActivateFunc(sumAi[a], thetaA[a], NeuronType.Bipolar);
 
             }
+            log("Sum R=" + sumR + Environment.NewLine);
+            log("Порог активации нейрона выходного слоя, thetaR=" + thetaR + Environment.NewLine);
+            log("Результат: " + ActivateFunc(sumR, thetaR, NeuronType.Bipolar) + Environment.NewLine);
 
             return ActivateFunc(sumR, thetaR, NeuronType.Bipolar);
         }
 
-        public double [, ] AssocWeights() 
-        {
-            return SA_W;
-        }
-
-        public double [] ReactWeights()
-        {
-            return AR_W;
-        }
 
         public static Log log;
-
+        // Количество сенсоров, нейронов скрытого слоя, нейронов выходного слоя
         int sensor, associative, reaction;
-        // Сенсорные нейроны
-        //int[] S;
         // Веса связей между сенсорными и ассоциативными нейронами
         double[,] SA_W;
         // Пороги срабатывания нейронов скрытого слоя
         double[] thetaA;
         // Веся связей между ассоциативными и реагирующими нейронами
         double[] AR_W;
-        // Реагирующие нейроны
         // Пороги срабатывания нейронов выходного слоя
         double thetaR;
     }
