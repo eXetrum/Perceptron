@@ -10,8 +10,36 @@ namespace Perceptron
 {
     public class InputGUI : DataGridView
     {
+        public enum NeuronType { Binary, Bipolar };
+        static int NeuroActive(NeuronType nt)
+        {
+            switch(nt) {
+                case NeuronType.Binary:
+                    return 1;
+                case NeuronType.Bipolar:
+                    return 1;
+                default:
+                    return 0;
+            }
+        }
+
+        static int NeuroPassive(NeuronType nt)
+        {
+            switch (nt)
+            {
+                case NeuronType.Binary:
+                    return 0;
+                case NeuronType.Bipolar:
+                    return -1;
+                default:
+                    return 0;
+            }
+        }
+
         bool drawMode { get; set; }
         Color selectionCellColor { get; set; }
+
+        NeuronType neuronType;
 
         public static int cellWidth = 20;
         public static int cellHeight = 20;
@@ -25,6 +53,10 @@ namespace Perceptron
         public InputGUI(int rows, int cols, bool dontCount = false)
             : base()
         {
+            // Используемый тип нейрона
+            neuronType = NeuronType.Binary;
+            //
+
             if(!dontCount)
             ++objectCounter;
             titleLabel = new Button();
@@ -79,11 +111,13 @@ namespace Perceptron
             selectionCellColor = Color.FromArgb(255, 255, 128, 255);
         }
 
-        public void SetImage(int[] image)
+        public void SetImage(int []image)
         {
             for (int i = 0; i < Rows.Count; ++i)
-                for (int j = 0; j < Columns.Count; ++j)
-                    if (image[i * Columns.Count + j] == 1) this.Rows[i].Cells[j].Style.BackColor = selectionCellColor;
+                for (int j = 0; j < Columns.Count; ++j) 
+                    if (image[i * Columns.Count + j] == NeuroActive(neuronType) ) this.Rows[i].Cells[j].Style.BackColor = selectionCellColor;
+                    else this.Rows[i].Cells[j].Style.BackColor = Color.Empty;
+
 
             this.Rows[0].Cells[1].Selected = true;
             this.ClearSelection();
@@ -95,8 +129,7 @@ namespace Perceptron
             int[] X = new int[Rows.Count * Columns.Count];
             for (int i = 0; i < Rows.Count; ++i)
                 for (int j = 0; j < Columns.Count; ++j)
-                    X[i * Columns.Count + j] = (this.Rows[i].Cells[j].Style.BackColor.Equals(selectionCellColor) ? 1 : 0);
-
+                    X[i * Columns.Count + j] = (this.Rows[i].Cells[j].Style.BackColor.Equals(selectionCellColor) ? NeuroActive(neuronType) : NeuroPassive(neuronType));
             return X;
         }
 
