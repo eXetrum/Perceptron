@@ -16,7 +16,7 @@ namespace Perceptron
         static int gridRows = 6;
         static int gridCols = 4;
         static int sensorCount = gridRows * gridCols;
-        static int associativeCount = 2;//sensorCount + 1;
+        static int associativeCount = sensorCount * 2;
         static int reactionCount = 1;
 
         InputGUI []gui = new InputGUI[inputGuiCount];
@@ -36,12 +36,6 @@ namespace Perceptron
         static int currentImgSet = -1;
         // Текущий способ обучения: 0 - альфа подкрепления, 1 - гамма подкрепления
         static int currentLearningType = -1;
-
-        /*static KeyValuePair<int, string> Result = new KeyValuePair<int,string>[] 
-        {
-            new KeyValuePair<int, string>(+1, 
-            new KeyValuePair<int, string>(-1, 
-        };*/
         // Бинарное представление букв имени
         List<Perceptron.PairSet> name = new List<Perceptron.PairSet>() {
             // Буква "А"
@@ -114,7 +108,8 @@ namespace Perceptron
             }
             // Создаем окно ввода пользовательского символа            
             userGui.attachTo(InputRecognPanel, true);
-            
+            // Задаем случайный символ
+            userGui.SetImage(name[new Random(DateTime.Now.Millisecond).Next(2)].image);
         }
 
         private void btnLearn_Click(object sender, EventArgs e)
@@ -138,17 +133,21 @@ namespace Perceptron
 
             if (alphaLearningChoice.Checked)
             {
-                MessageBox.Show("Alpha");
-                perceptron.Learn(images, true);
-                currentImgSet = inputNameSet.Checked ? 0 : 1;
-                currentLearningType = 0;
+                if (MessageBox.Show("Начать обучение альфа подкреплением ?", "Запуск обучения", MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
+                {
+                    perceptron.Learn(images, true);
+                    currentImgSet = inputNameSet.Checked ? 0 : 1;
+                    currentLearningType = 0;
+                }
             }
             else
             {
-                MessageBox.Show("Gamma");
-                perceptron.Learn(images, false);
-                currentImgSet = inputNameSet.Checked ? 0 : 1;
-                currentLearningType = 1;
+                if (MessageBox.Show("Начать обучение гамма подкреплением ?", "Запуск обучения", MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
+                {
+                    perceptron.Learn(images, false);
+                    currentImgSet = inputNameSet.Checked ? 0 : 1;
+                    currentLearningType = 1;
+                }
             }
 
 

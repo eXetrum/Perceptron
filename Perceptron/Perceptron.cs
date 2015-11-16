@@ -86,7 +86,6 @@ namespace Perceptron
             {
                 allSum.Add(FeedAssocLayer(images[img].image));
             }
-
             for (int a = 0; a < associative; ++a) 
             {
                 double sumAi = 0;
@@ -100,6 +99,8 @@ namespace Perceptron
                 }
                 // Выбираем в качестве порога отношение взвешенных сумм Ai нейрона к общему количеству изображений
                 thetaA[a] = sumAi / images.Count;
+                //thetaA[a] = sumAi / new Random(DateTime.Now.Millisecond).Next(sensor);
+                //thetaA[a] = temp.Max() /  / temp.Count;
                 log("Порог активации A[" + a + "] нейрона в скрытом слое: thetaA[" + a + "]=" + thetaA[a] + Environment.NewLine);    
             }
             log("=======================================================================" + Environment.NewLine);
@@ -124,8 +125,9 @@ namespace Perceptron
             }
             double minRi = Ri.Min();
             double maxRi = Ri.Max();
-            //thetaR = Ri.Sum() / images.Count;
-            thetaR = (minRi + maxRi) / 2.0;
+            thetaR = Ri.Sum() / images.Count;
+            //thetaR = (minRi + maxRi) / 2.0;
+            //thetaR = Ri.Max();
             log(string.Format("min={0}, max={1}, Пороговое значение активации выходных нейронов R -> theta={2}", minRi, maxRi, thetaR) + Environment.NewLine);
             // Скармливаем сети все переданные изображения
             ////////////////////////////////////////////////////////////////////
@@ -161,72 +163,135 @@ namespace Perceptron
             for (int img = 0; img < images.Count; ++img)
                 if (images[img].image.Length != sensor) throw new Exception("Image len != sensor len");
             /// Инициализация сети.
+            /// 
+init:
             InitNetwork(images);
             // Процесс обучения
             // 
-            if (AlphaLearning)
+            log("==================[Запуск процесса обучения с " + (AlphaLearning ? "альфа" : "гамма" ) + " подкреплением]=================" + Environment.NewLine);
+            // Маркер завершения обучения
+            bool processComplete = false;
+            // Шаг обучения
+            double step = 0.01;
+            // Количество итераций
+            int iteration = 0;
+            int maxIterCount = 500;
+
+            List<int> imgActiveConnections = new List<int>();
+
+            for (int img = 0; img < images.Count; ++img)
             {
-                log("==================[Запуск процесса обучения с альфа подкреплением]=================" + Environment.NewLine);
-                // Маркер завершения обучения
-                bool processComplete = false;
-                // Шаг обучения
-                double step = 0.01;
-                // Количество итераций
-                int iteration = 0;
-                // Запуск процесса
-                while (!processComplete)
+                imgActiveConnections.Add(0);
+                List<double> sumAi = FeedAssocLayer(images[img].image);
+
+                for (int a = 0; a < associative; ++a)
                 {
-                    iteration++;
-                    // Считаем по умолчанию процесс обучения завершенным
-                    processComplete = true;
-                    // Обрабатываем каждое изображение из обучающей выборки
-                    for (int img = 0; img < images.Count; ++img)
+                    if (ActivateFunc(sumAi[a], thetaA[a], NeuronType.Bipolar) == NeuroActive(NeuronType.Bipolar))
                     {
-                        log("Изображение #" + img + Environment.NewLine);
-                        double sumR = 0;
-                        List<int> activeAR = new List<int>();
-                        List<double> sumAi = FeedAssocLayer(images[img].image);
-                        for (int a = 0; a < associative; ++a)
+                        imgActiveConnections[img]++;
+                    }
+                }
+            }
+            // Рассчитываем приращение для активных и пассивных весов
+            List<double> dwActive = new List<double>();
+            List<double> dwPassive = new List<double>();
+            int N = images.Count;
+            for (int img = 0; img < N; ++img)
+            {
+                dwActive.Add(N * ( - (imgActiveConnections[img] * step) / associative));
+                dwPassive.Add(N * ( - (imgActiveConnections[img] * step) / associative));
+            }             
+            // Запуск процесса
+            while (!processComplete)
+            {
+                iteration++;
+                if (iteration >= maxIterCount)
+                {
+                    MessageBox.Show("Достигнут предел количества итераций...Перезапуск");
+                    goto init;
+                }
+                // Считаем по умолчанию процесс обучения завершенным
+                processComplete = true;
+                // Обрабатываем каждое изображение из обучающей выборки
+                for (int img = 0; img < images.Count; ++img)
+                {
+                    log("Изображение #" + img + Environment.NewLine);
+                    double sumR = 0;
+                    List<int> activeAR = new List<int>();
+                    List<double> sumAi = FeedAssocLayer(images[img].image);
+                    for (int a = 0; a < associative; ++a)
+                    {
+                        double w = AR_W[a] * ActivateFunc(sumAi[a], thetaA[a], NeuronType.Bipolar);
+                        sumR += w;
+                        if (ActivateFunc(sumAi[a], thetaA[a], NeuronType.Bipolar) == NeuroActive(NeuronType.Bipolar))
                         {
-                            double w = AR_W[a] * ActivateFunc(sumAi[a], thetaA[a], NeuronType.Bipolar);
-                            sumR += w;
-                            if (ActivateFunc(sumAi[a], thetaA[a], NeuronType.Bipolar) == NeuroActive(NeuronType.Bipolar))
-                            {
-                                log("A[" + a + "]=" + sumAi[a] + ", active" + Environment.NewLine);
-                                activeAR.Add(a);
-                            }
-                            else
-                            {
-                                log("A[" + a + "]=" + sumAi[a] + ", passive" + Environment.NewLine);
-                            }
+                            //log("A[" + a + "]=" + sumAi[a] + ", active" + Environment.NewLine);
+                            activeAR.Add(a);
                         }
-                        // Получаем результат активации выходного слоя
-                        int Rreact = ActivateFunc(sumR, thetaR, NeuronType.Bipolar);
-                        log("Порог активации нейрона выходного слоя, thetaR=" + thetaR + Environment.NewLine);
-                        log("R=" + sumR + ", " + (ActivateFunc(sumR, thetaR, NeuronType.Bipolar) == NeuroActive(NeuronType.Bipolar) ? "active" : "passive") + Environment.NewLine);
-                        log("AR веса связей: " + string.Join(" ", AR_W) + Environment.NewLine);
-                        log("Ожидаемая реакция: " + images[img].t + ", Полученная реация: " + Rreact + Environment.NewLine);
-                        // Реакция не совпадает с ожидаемой
-                        if (Rreact != images[img].t)
+                        else
+                        {
+                            //log("A[" + a + "]=" + sumAi[a] + ", passive" + Environment.NewLine);
+                        }
+                    }
+                    // Получаем результат активации выходного слоя
+                    int Rreact = ActivateFunc(sumR, thetaR, NeuronType.Bipolar);
+                    log("Порог активации нейрона выходного слоя, thetaR=" + thetaR + Environment.NewLine);
+                    log("R=" + sumR + ", " + (ActivateFunc(sumR, thetaR, NeuronType.Bipolar) == NeuroActive(NeuronType.Bipolar) ? "active" : "passive") + Environment.NewLine);
+                    log("AR веса связей: " + string.Join(" ", AR_W) + Environment.NewLine);
+                    log("Ожидаемая реакция: " + images[img].t + ", Полученная реация: " + Rreact + Environment.NewLine);
+                    // Реакция не совпадает с ожидаемой
+                    if (Rreact != images[img].t)
+                    {
+                        // Корректировка - альфа подкрепления
+                        if (AlphaLearning)
                         {
                             // Корректировка активных связей
                             for (int active = 0; active < activeAR.Count; ++active)
                                 AR_W[activeAR[active]] -= step * Rreact;
-                            // Обучение не завершено
-                            processComplete = false;
                         }
-                        
+                        // Корректировка - гамма подкрепления
+                        else
+                        {
+                            double totalRsum = 0;
+                            for (int _img = 0; _img < images.Count; ++_img)
+                            {
+                                List<double> Ai = FeedAssocLayer(images[_img].image);
+                                for (int a = 0; a < associative; ++a)
+                                    totalRsum += AR_W[a] * ActivateFunc(Ai[a], thetaA[a], NeuronType.Bipolar);
+                            }
+                            log("Общая сумма на R=" + totalRsum + Environment.NewLine);
+
+                            
+
+                            double wMin = NeuroPassive(NeuronType.Bipolar);
+                            double wMax = NeuroActive(NeuronType.Bipolar);
+
+
+
+                            for (int a = 0; a < associative; ++a)
+                            {
+                                // Активная связь
+                                if (activeAR.Contains(a))
+                                {
+                                    AR_W[a] += dwActive[img] * Rreact;
+                                }
+                                else
+                                {
+                                    AR_W[a] -= dwPassive[img] * Rreact;
+                                }                               
+                            }
+                            //MessageBox.Show("next?");
+                        }
+                        // Обучение не завершено
+                        processComplete = false;
                     }
-                    log("===========================================================" + Environment.NewLine);            
-                    //MessageBox.Show("next?");
-                    Application.DoEvents();
+                        
                 }
-                log("[Шаг обучения]=" + step + Environment.NewLine);
-                log("=========[Обучение завершено, количество итераций=" + iteration + "]==========" + Environment.NewLine);
+                log("===========================================================" + Environment.NewLine);            
+                Application.DoEvents();
             }
-            else
-            {
-            }
+            log("[Шаг обучения]=" + step + Environment.NewLine);
+            log("=========[Обучение завершено, количество итераций=" + iteration + "]==========" + Environment.NewLine);
         }
 
         List<double> FeedAssocLayer(int[] S)

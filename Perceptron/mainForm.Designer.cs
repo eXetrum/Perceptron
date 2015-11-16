@@ -144,7 +144,7 @@ namespace Perceptron
             this.logBox.Multiline = true;
             this.logBox.Name = "logBox";
             this.logBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.logBox.Size = new System.Drawing.Size(538, 204);
+            this.logBox.Size = new System.Drawing.Size(538, 247);
             this.logBox.TabIndex = 3;
             // 
             // recognizeCharacter
@@ -181,7 +181,7 @@ namespace Perceptron
             this.logGroup.Controls.Add(this.logBox);
             this.logGroup.Location = new System.Drawing.Point(12, 242);
             this.logGroup.Name = "logGroup";
-            this.logGroup.Size = new System.Drawing.Size(555, 235);
+            this.logGroup.Size = new System.Drawing.Size(555, 272);
             this.logGroup.TabIndex = 9;
             this.logGroup.TabStop = false;
             this.logGroup.Text = "Ход работы";
@@ -190,7 +190,7 @@ namespace Perceptron
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(579, 485);
+            this.ClientSize = new System.Drawing.Size(579, 526);
             this.Controls.Add(this.logGroup);
             this.Controls.Add(this.recognizeCharacter);
             this.Controls.Add(this.learningSet);
